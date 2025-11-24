@@ -35,6 +35,10 @@ jobs:
       - name: Set up Docker Buildx Cache
         uses: docker/setup-buildx-action@v3
 
+      - name: Create network
+        run: |
+          docker network create internal_sync_network
+
       - name: Build PHP image
         uses: docker/build-push-action@v5
         with:
