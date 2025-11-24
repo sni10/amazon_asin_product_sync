@@ -1,20 +1,12 @@
 services:
-    amazon_asin_product_sync:
-        build:
-            context: ../../..
-            dockerfile: Dockerfile
-        networks:
-            - walmart_scraper_network
-        environment:
-            APP_ENV: 'prod'
-        env_file:
-            - ../../../.env.prod
-        volumes:
-            - ../../..:/var/www/amazon_asin_product_sync
-            - ../../../config/php.ini:/usr/local/etc/php/conf.d/custom-php.ini
-        command: composer run-script serve
-
-networks:
-    walmart_scraper_network:
-        external: true
-        name: walmart_scraper_network
+  php:
+    build:
+      args:
+        APP_ENV: ${APP_ENV}
+    environment:
+      APP_ENV: ${APP_ENV}
+      XDEBUG_MODE: ${XDEBUG_MODE:-coverage}
+    entrypoint: ["/usr/local/bin/entrypoint.sh"]
+    command: []
+#    volumes:
+#      - .:/var/www/amazon_asin_product_sync

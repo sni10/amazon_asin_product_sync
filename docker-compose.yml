@@ -1,19 +1,24 @@
 services:
-
-  amazon_asin_product_sync:
+  php:
+    image: amazon-asin-sync-php:latest
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        APP_ENV: ${APP_ENV}
     environment:
-      APP_ENV: 'prod'
-    env_file:
-      - .env.prod
+      APP_ENV: ${APP_ENV}
+      KAFKA_EDI_SERVER_HOST: ${KAFKA_EDI_SERVER_HOST}
+      KAFKA_EDI_SERVER_PORT: ${KAFKA_EDI_SERVER_PORT}
+    container_name: amazon_asin_product_sync
+    command: /usr/bin/supervisord -c /etc/supervisord.conf
     networks:
-      - walmart_scraper_network
-    command: composer run-script serve
+      - internal_sync_network
+    expose:
+      - 9000
 
 networks:
-  walmart_scraper_network:
+  internal_sync_network:
     driver: bridge
     external: true
-    name: walmart_scraper_network
+    name: internal_sync_network

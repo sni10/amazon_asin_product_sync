@@ -1,17 +1,17 @@
-.idea
-.vscode
+/.phpunit.cache
+/.phpunit.result.cache
 
-.env.*
-.env
-
-*.log
-*.cache
+/.idea
+/.vscode
+/.fleet
 
 ###> symfony/framework-bundle ###
 /.env
 /.env.local
 /.env.local.php
 /.env.*.local
+/.env.test
+/.env.prod
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
@@ -26,7 +26,7 @@
 /config/amazon_proxy.json
 
 /config/entrypoint.sh
-/docker/configs-data/php.ini
+/config/php.ini
 /config/php-fpm.conf
 
 /config/sftp_config.json
@@ -35,4 +35,5 @@
 /.junie/
 test_auth_prod.php
 /examples/
-!/.env.example
+/.composer/
+ARCHITECTURE_ANALYSIS.md
