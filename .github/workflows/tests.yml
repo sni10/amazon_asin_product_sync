@@ -60,7 +60,7 @@ jobs:
 
       - name: Run PHPUnit with coverage
         run: |
-          docker compose exec -e XDEBUG_MODE=${XDEBUG_MODE} php vendor/bin/phpunit \
+          docker compose exec -T -e XDEBUG_MODE=coverage php vendor/bin/phpunit \
             --coverage-text
 
       - name: Copy coverage reports from container
