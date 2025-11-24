@@ -58,6 +58,10 @@ jobs:
             -f docker/config-envs/${APP_ENV}/docker-compose.override.yml \
             up -d
 
+      - name: Install dependencies
+        run: |
+          docker compose exec -T php composer install --no-interaction --prefer-dist --optimize-autoloader
+
       - name: Run PHPUnit with coverage
         run: |
           docker compose exec -T -e XDEBUG_MODE=coverage php vendor/bin/phpunit \
