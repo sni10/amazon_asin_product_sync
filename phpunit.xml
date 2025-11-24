@@ -9,6 +9,9 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -31,7 +34,7 @@
     <coverage>
         <report>
             <text outputFile="php://stdout"/>
-            <html outputDirectory="storage/coverage-report"/>
+            <html outputDirectory="var/coverage-report"/>
         </report>
     </coverage>
 </phpunit>

@@ -2,131 +2,243 @@
 # Config
 ##################
 
-ENVIRONMENT ?= test
-ENV_FILE = ./docker/config-envs/$(ENVIRONMENT)/.env.$(ENVIRONMENT)
-COMPOSE_FILES = -f ./docker-compose.yml -f ./docker/config-envs/$(ENVIRONMENT)/docker-compose.override.yml
-CONTAINER_NAME ?= amazon_asin_product_sync
-DOCKER_EXEC = docker exec -it $(CONTAINER_NAME)
-DOCKER_EXEC_WWW = docker exec -it -u www-data $(CONTAINER_NAME)
-WORKDIR = /var/www/amazon_asin_product_sync
+APP_ENV ?= test
+ENV_FILE = .env.$(APP_ENV)
+COMPOSE_FILES = -f docker-compose.yml -f docker/config-envs/$(APP_ENV)/docker-compose.override.yml
+DC = docker compose --env-file $(ENV_FILE) $(COMPOSE_FILES)
+
+# Production config (без override)
+DC_PROD = docker compose --env-file .env.prod
 
 ##################
-# Docker Compose
+# Docker Compose - Test/Dev
 ##################
 
-dc_build:
-	docker-compose $(COMPOSE_FILES) build --pull
+.PHONY: build up down restart logs ps shell
 
-dc_up:
-	docker-compose $(COMPOSE_FILES) up -d --build --force-recreate --remove-orphans
+build:
+	$(DC) build
 
-dc_down:
-	docker-compose $(COMPOSE_FILES) down --volumes --rmi local --remove-orphans
+up:
+	$(DC) up -d
 
-dc_restart:
-	docker-compose $(COMPOSE_FILES) down --volumes --rmi local --remove-orphans
-	docker-compose $(COMPOSE_FILES) up -d --build --force-recreate
+down:
+	$(DC) down -v
 
-dc_logs:
-	docker-compose $(COMPOSE_FILES) logs -f
+restart: down up
 
-dc_ps:
-	docker-compose $(COMPOSE_FILES) ps
+logs:
+	$(DC) logs -f
 
-dc_exec:
-	$(DOCKER_EXEC) bash
+ps:
+	$(DC) ps
+
+shell:
+	$(DC) exec php bash
 
 ##################
-# Logs (Debug)
+# Docker Compose - Production
 ##################
 
-logs_id_cross_var:
-	$(DOCKER_EXEC) tail -f /var/log/supervisor/id_cross_var.out.log
+.PHONY: prod-build prod-up prod-down prod-restart prod-logs
 
-logs_id_cross_var_err:
-	$(DOCKER_EXEC) tail -f /var/log/supervisor/id_cross_var.err.log
+prod-build:
+	$(DC_PROD) build
 
-logs_sheet_to_kafka:
-	$(DOCKER_EXEC) tail -f /var/log/supervisor/asin_sheet_to_kafka.out.log
+prod-up:
+	$(DC_PROD) up -d
 
-logs_sheet_to_kafka_err:
-	$(DOCKER_EXEC) tail -f /var/log/supervisor/asin_sheet_to_kafka.err.log
+prod-down:
+	$(DC_PROD) down -v
 
-logs_kafka_to_sheet:
-	$(DOCKER_EXEC) tail -f /var/log/supervisor/asin_kafka_to_sheet.out.log
+prod-restart: prod-down prod-up
 
-logs_kafka_to_sheet_err:
-	$(DOCKER_EXEC) tail -f /var/log/supervisor/asin_kafka_to_sheet.err.log
-
-logs_supervisor:
-	$(DOCKER_EXEC) tail -f /var/log/supervisord.log
-
-logs_php:
-	$(DOCKER_EXEC) tail -f /var/log/php_errors.log
+prod-logs:
+	$(DC_PROD) logs -f
 
 ##################
 # Symfony Console (App Commands)
 ##################
 
+.PHONY: console id-cross-var sheet-to-kafka kafka-to-sheet cache-clear
+
 console:
-	$(DOCKER_EXEC_WWW) php $(WORKDIR)/bin/console $(cmd)
+	$(DC) exec php php bin/console $(CMD)
 
-id_cross_var:
-	$(DOCKER_EXEC_WWW) php $(WORKDIR)/bin/console app:id-cross-var
+id-cross-var:
+	$(DC) exec php php bin/console app:id-cross-var
 
-sheet_to_kafka:
-	$(DOCKER_EXEC_WWW) php $(WORKDIR)/bin/console app:asin-sheet-to-kafka
+sheet-to-kafka:
+	$(DC) exec php php bin/console app:asin-sheet-to-kafka
 
-kafka_to_sheet:
-	$(DOCKER_EXEC_WWW) php $(WORKDIR)/bin/console app:asin-kafka-to-sheet
+kafka-to-sheet:
+	$(DC) exec php php bin/console app:asin-kafka-to-sheet
 
-cache_clear:
-	$(DOCKER_EXEC_WWW) php $(WORKDIR)/bin/console cache:clear
+cache-clear:
+	$(DC) exec php php bin/console cache:clear
+
+##################
+# Testing
+##################
+
+.PHONY: test test-coverage test-html test-unit test-filter
+
+test:
+	$(DC) exec php vendor/bin/phpunit --colors=always --testdox
+
+test-coverage:
+	$(DC) exec php vendor/bin/phpunit --coverage-text --colors=always --testdox
+
+test-html:
+	$(DC) exec php vendor/bin/phpunit --coverage-html=var/coverage-report
+
+test-unit:
+	$(DC) exec php vendor/bin/phpunit tests/Unit/ --colors=always --testdox
+
+# Usage: make test-filter FILTER=DataRowTest
+test-filter:
+	$(DC) exec php vendor/bin/phpunit --filter=$(FILTER) --colors=always --testdox
+
+##################
+# Logs (Debug)
+##################
+
+.PHONY: logs-id-cross-var logs-sheet-to-kafka logs-kafka-to-sheet logs-supervisor logs-php
+
+logs-id-cross-var:
+	$(DC) exec php tail -f /var/log/supervisor/id_cross_var.out.log
+
+logs-id-cross-var-err:
+	$(DC) exec php tail -f /var/log/supervisor/id_cross_var.err.log
+
+logs-sheet-to-kafka:
+	$(DC) exec php tail -f /var/log/supervisor/asin_sheet_to_kafka.out.log
+
+logs-kafka-to-sheet:
+	$(DC) exec php tail -f /var/log/supervisor/asin_kafka_to_sheet.out.log
+
+logs-supervisor:
+	$(DC) exec php tail -f /var/log/supervisord.log
+
+logs-php:
+	$(DC) exec php tail -f /var/log/php_errors.log
 
 ##################
 # Composer
 ##################
 
-composer_install:
-	$(DOCKER_EXEC_WWW) composer install --no-interaction --prefer-dist -d $(WORKDIR)
+.PHONY: composer-install composer-update composer-dump
 
-composer_update:
-	$(DOCKER_EXEC_WWW) composer update --no-interaction --prefer-dist -d $(WORKDIR)
+composer-install:
+	$(DC) exec php composer install
 
-composer_dump:
-	$(DOCKER_EXEC_WWW) composer dump-autoload -o -d $(WORKDIR)
+composer-update:
+	$(DC) exec php composer update
 
-##################
-# Tests
-##################
-
-test:
-	$(DOCKER_EXEC_WWW) php $(WORKDIR)/vendor/bin/phpunit -c $(WORKDIR)/phpunit.xml
-
-test_coverage:
-	$(DOCKER_EXEC_WWW) php $(WORKDIR)/vendor/bin/phpunit -c $(WORKDIR)/phpunit.xml --coverage-html $(WORKDIR)/var/coverage
-
-test_filter:
-	$(DOCKER_EXEC_WWW) php $(WORKDIR)/vendor/bin/phpunit -c $(WORKDIR)/phpunit.xml --filter=$(filter)
+composer-dump:
+	$(DC) exec php composer dump-autoload
 
 ##################
 # Supervisor
 ##################
 
-supervisor_start:
-	$(DOCKER_EXEC) /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+.PHONY: supervisor-start supervisor-status supervisor-restart
 
-supervisor_status:
-	$(DOCKER_EXEC) supervisorctl status
+supervisor-start:
+	$(DC) exec php /usr/bin/supervisord -c /etc/supervisord.conf
 
-supervisor_restart:
-	$(DOCKER_EXEC) supervisorctl restart all
+supervisor-status:
+	$(DC) exec php supervisorctl status
+
+supervisor-restart:
+	$(DC) exec php supervisorctl restart all
+
+##################
+# Setup & Init
+##################
+
+.PHONY: init setup
+
+# First-time setup for test environment
+init: build up composer-install
+	@echo "Test environment initialized successfully!"
+
+# Quick setup (assumes containers already exist)
+setup: up
+	@echo "Environment ready!"
 
 ##################
 # Cleanup
 ##################
 
-docker_clean:
+.PHONY: clean docker-prune
+
+clean:
+	$(DC) down -v --rmi local --remove-orphans
+
+docker-prune:
 	docker system prune -af --volumes
 	docker builder prune -af
-	docker image prune -af
+
+##################
+# Help
+##################
+
+.PHONY: help
+
+help:
+	@echo "Usage: make [target] [APP_ENV=test|prod]"
+	@echo ""
+	@echo "Docker (Test/Dev):"
+	@echo "  build              Build containers"
+	@echo "  up                 Start containers"
+	@echo "  down               Stop and remove containers"
+	@echo "  restart            Restart containers"
+	@echo "  logs               Follow container logs"
+	@echo "  ps                 List containers"
+	@echo "  shell              Open bash in PHP container"
+	@echo ""
+	@echo "Docker (Production):"
+	@echo "  prod-build         Build production containers"
+	@echo "  prod-up            Start production containers"
+	@echo "  prod-down          Stop production containers"
+	@echo "  prod-restart       Restart production containers"
+	@echo ""
+	@echo "Symfony Console:"
+	@echo "  console            Run console command (CMD=...)"
+	@echo "  id-cross-var       Run ASIN cross-variation identification"
+	@echo "  sheet-to-kafka     Sync Google Sheets to Kafka"
+	@echo "  kafka-to-sheet     Sync Kafka to Google Sheets"
+	@echo "  cache-clear        Clear Symfony cache"
+	@echo ""
+	@echo "Testing:"
+	@echo "  test               Run all tests"
+	@echo "  test-coverage      Run tests with coverage report"
+	@echo "  test-html          Generate HTML coverage report"
+	@echo "  test-unit          Run unit tests only"
+	@echo "  test-filter        Run specific test (FILTER=testName)"
+	@echo ""
+	@echo "Logs:"
+	@echo "  logs-id-cross-var  View id-cross-var logs"
+	@echo "  logs-sheet-to-kafka View sheet-to-kafka logs"
+	@echo "  logs-kafka-to-sheet View kafka-to-sheet logs"
+	@echo "  logs-supervisor    View supervisor logs"
+	@echo "  logs-php           View PHP error logs"
+	@echo ""
+	@echo "Composer:"
+	@echo "  composer-install   Install dependencies"
+	@echo "  composer-update    Update dependencies"
+	@echo "  composer-dump      Dump autoload"
+	@echo ""
+	@echo "Supervisor:"
+	@echo "  supervisor-start   Start supervisord"
+	@echo "  supervisor-status  Check process status"
+	@echo "  supervisor-restart Restart all processes"
+	@echo ""
+	@echo "Setup:"
+	@echo "  init               Full initialization (build + up + composer)"
+	@echo "  setup              Quick setup (up only)"
+	@echo ""
+	@echo "Cleanup:"
+	@echo "  clean              Remove containers and images"
+	@echo "  docker-prune       Full Docker cleanup"
