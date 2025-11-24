@@ -8,7 +8,6 @@ services:
         APP_ENV: ${APP_ENV}
     env_file:
       - .env
-    container_name: amazon_asin_product_sync
     networks:
       - internal_sync_network
     expose:
