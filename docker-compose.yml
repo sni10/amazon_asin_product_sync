@@ -1,0 +1,19 @@
+services:
+
+  amazon_asin_product_sync:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: 'prod'
+    env_file:
+      - .env.prod
+    networks:
+      - walmart_scraper_network
+    command: composer run-script serve
+
+networks:
+  walmart_scraper_network:
+    driver: bridge
+    external: true
+    name: walmart_scraper_network

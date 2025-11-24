@@ -1,0 +1,84 @@
+{
+    "type": "project",
+    "license": "proprietary",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.1",
+        "ext-ctype": "*",
+        "ext-iconv": "*",
+        "guzzlehttp/guzzle": "^7.6",
+        "jlevers/selling-partner-api": "6.0.4",
+        "google/apiclient": "v2.18.2",
+        "google/apiclient-services": "^0.383.0",
+        "symfony/config": "^6.4",
+        "symfony/console": "6.4.*",
+        "symfony/dotenv": "6.4.*",
+        "symfony/framework-bundle": "6.4.*",
+        "symfony/lock": "6.4.*",
+        "symfony/messenger": "v6.4.0",
+        "symfony/monolog-bundle": "^3.10",
+        "symfony/rate-limiter": "^6.4",
+        "symfony/runtime": "6.4.*",
+        "symfony/serializer": "v6.4.15",
+        "symfony/validator": "v6.4.16",
+        "symfony/yaml": "6.4.*"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "symfony/runtime": true
+        },
+        "bump-after-update": true,
+        "sort-packages": true,
+        "cache-files-dir": "/var/www/.composer/cache",
+        "process-timeout": 1000
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Tests\\": "tests/"
+        }
+    },
+    "replace": {
+        "symfony/polyfill-ctype": "*",
+        "symfony/polyfill-iconv": "*",
+        "symfony/polyfill-php72": "*",
+        "symfony/polyfill-php73": "*",
+        "symfony/polyfill-php74": "*",
+        "symfony/polyfill-php80": "*",
+        "symfony/polyfill-php81": "*",
+        "symfony/polyfill-php82": "*"
+    },
+    "scripts": {
+        "serve": [
+            "@putenv COMPOSER_ALLOW_SUPERUSER=1",
+            "Composer\\Config::disableProcessTimeout",
+            "@composer install --no-interaction",
+            "php bin/console cache:clear",
+            "echo 'All engines running! Starting supervisord...'",
+            "exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"
+        ],
+        "auto-scripts": {
+            "cache:clear": "symfony-cmd",
+            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+        },
+        "post-install-cmd": [
+        ],
+        "post-update-cmd": [
+        ]
+    },
+    "conflict": {
+        "symfony/symfony": "*"
+    },
+    "extra": {
+        "symfony": {
+            "allow-contrib": false,
+            "require": "6.4.*"
+        }
+    }
+}

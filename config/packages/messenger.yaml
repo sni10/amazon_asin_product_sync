@@ -1,0 +1,4 @@
+framework:
+    messenger:
+        transports:
+            kafka: '%env(KAFKA_TRANSPORT_DSN)%'

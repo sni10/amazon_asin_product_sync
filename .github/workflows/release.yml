@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: tag
+        run: |
+          LATEST=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest=$LATEST" >> $GITHUB_OUTPUT
+
+      - name: Calculate next version
+        id: version
+        run: |
+          VERSION="${{ steps.tag.outputs.latest }}"
+          VERSION=${VERSION#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          echo "new=v${MAJOR}.${MINOR}.$((PATCH + 1))" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          TAG="${{ steps.tag.outputs.latest }}"
+          RANGE=$([ "$TAG" = "v0.0.0" ] && echo "" || echo "$TAG..HEAD")
+          COMMITS=$(git log $RANGE --pretty=format:'- %s (`%h`)' 2>/dev/null || echo "- Initial release")
+          {
+            echo "body<<EOF"
+            echo "$COMMITS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.new }}
+          name: ${{ steps.version.outputs.new }}
+          body: |
+            ## Changes
+            ${{ steps.changelog.outputs.body }}
+          draft: false
+          prerelease: false

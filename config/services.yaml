@@ -1,0 +1,84 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    app.schema: '%env(APP_SCHEMA)%'
+    app.schema.ext: '%env(APP_EXT_SCHEMA)%'
+    ap.walmart_product_wait_days_before_retry: '%env(WALMART_PRODUCT_WAIT_DAYS_BEFORE_RETRY)%'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+
+    App\Service\CredentialsGenerator:
+        arguments:
+            $logger: '@logger'
+            $credentialsFilePath: '%kernel.project_dir%/config/amazon_credentials.json'
+            $proxyFilePath: '%kernel.project_dir%/config/amazon_proxy.json'
+
+    App\Service\Kafka\KafkaConsumer:
+        arguments:
+            $logger: '@logger'
+
+    App\Service\Kafka\GoogleKafka\GoogleKafkaConsumer:
+        arguments:
+            $logger: '@logger'
+
+
+    App\Service\Kafka\GoogleKafka\GoogleKafkaProducer:
+        arguments:
+            $logger: '@logger'
+
+    App\Service\Kafka\KafkaProducer:
+        arguments:
+            $logger: '@logger'
+
+    App\Service\IdentifyProducts:
+        arguments:
+            $amazonService: '@App\Service\AmazonService'
+            $logger: '@logger'
+            $kafkaConsumer: '@App\Service\Kafka\KafkaConsumer'
+            $kafkaProducer: '@App\Service\Kafka\KafkaProducer'
+
+    App\Service\ManageAsins:
+        arguments:
+            $sheetHandler: '@App\Service\GoooleHandler\GoogleSheetsHandler'
+            $logger: '@logger'
+            $kafkaConsumer: '@App\Service\Kafka\GoogleKafka\GoogleKafkaConsumer'
+            $kafkaProducer: '@App\Service\Kafka\GoogleKafka\GoogleKafkaProducer'
+
+    App\Service\AmazonService:
+        arguments:
+            $logger: '@logger'
+            $credentialsGenerator: '@App\Service\CredentialsGenerator'
+            $isUseProxy: true
+
+    App\Service\GoooleHandler\GoogleApiHandler:
+        abstract: true
+        arguments:
+            $logger: '@logger'
+            $credentialsPath: '%kernel.project_dir%/config/credentials.json.example'
+            $tokenPath: '%kernel.project_dir%/config/token.json.example'
+
+    App\Service\GoooleHandler\GoogleSheetsHandler:
+        arguments:
+            $logger: '@logger'
+            $credentialsPath: '%kernel.project_dir%/config/credentials.json.example'
+            $tokenPath: '%kernel.project_dir%/config/token.json.example'
