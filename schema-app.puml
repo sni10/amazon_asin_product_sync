@@ -1,0 +1,143 @@
+@startuml
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam classAttributeIconVisibility false
+skinparam classAttributeIconSize 0
+
+' Актуальная архитектура Amazon ASIN Product Sync
+
+package "Kernel/Config" {
+  class Kernel
+}
+
+package "Model" {
+  class DataRow {
+    +__construct(array)
+    +toArray(): array
+  }
+  class DataCollection {
+    +add(DataRow): void
+    +all(): array
+    +count(): int
+  }
+}
+
+package "Google Handler" {
+  interface GoogleHandlerInterface
+
+  abstract class GoogleApiHandler {
+    - logger: LoggerInterface
+    - client: Google\Client
+    - service
+    - credentialsPath: string
+    - tokenPath: string
+    + readData(string, ?string): DataCollection
+    + writeData(string, string, array): void
+  }
+
+  class GoogleSheetsHandler extends GoogleApiHandler {
+    + readData(string, ?string): DataCollection
+    + writeData(string, string, array): void
+    + overwriteData(string, string, array): void
+  }
+}
+
+package "Kafka" {
+  abstract class AbstractKafkaProducer {
+    - producer: RdKafka\Producer
+    - logger: LoggerInterface
+    - topicName: string
+    + produce(array): void
+  }
+
+  abstract class AbstractKafkaConsumer {
+    + consume(int): array
+  }
+
+  class KafkaProducer extends AbstractKafkaProducer
+  class KafkaConsumer extends AbstractKafkaConsumer
+
+  package "GoogleKafka" {
+    class GoogleKafkaProducer extends AbstractKafkaProducer
+    class GoogleKafkaConsumer extends AbstractKafkaConsumer
+  }
+}
+
+package "Services" {
+  class CredentialsGenerator {
+    + getCredentials(): array
+  }
+
+  class ExistingKeysManager {
+    + has(string|int|null, ?string, ?string): bool
+    + add(string|int|null, ?string, ?string): void
+  }
+
+  class AmazonService {
+    - isUseProxy: bool
+    - limiter: RateLimiterFactory
+    - logger: LoggerInterface
+    - credentialsGenerator: CredentialsGenerator
+    + hasCredentials(): bool
+    + initializeConnection(): void
+    + getAmazonProducts(array, string = "UPC"): array
+  }
+
+  class IdentifyProducts {
+    - kafkaConsumer: KafkaConsumer
+    - kafkaProducer: KafkaProducer
+    - amazonService: AmazonService
+    - logger: LoggerInterface
+    + init(): self
+    + run(): void
+  }
+
+  class ManageAsins {
+    - sheetHandler: GoogleSheetsHandler
+    - logger: LoggerInterface
+    - kafkaConsumer: GoogleKafkaConsumer
+    - kafkaProducer: GoogleKafkaProducer
+    + processKafkaToSheet(array): int
+    + processSheetToKafka(): int
+    + getMessages(): array
+  }
+}
+
+package "Commands" {
+  class IdentifyCrossVariationsCommand
+  class KafkaToSheetCommand
+  class SheetToKafkaCommand
+}
+
+' Наследование/реализация
+GoogleApiHandler ..|> GoogleHandlerInterface
+GoogleSheetsHandler --|> GoogleApiHandler
+
+KafkaProducer --|> AbstractKafkaProducer
+KafkaConsumer --|> AbstractKafkaConsumer
+GoogleKafkaProducer --|> AbstractKafkaProducer
+GoogleKafkaConsumer --|> AbstractKafkaConsumer
+
+' Зависимости сервисов
+IdentifyProducts --> AmazonService
+IdentifyProducts --> KafkaConsumer
+IdentifyProducts --> KafkaProducer
+
+ManageAsins --> GoogleSheetsHandler
+ManageAsins --> GoogleKafkaProducer
+ManageAsins --> GoogleKafkaConsumer
+ManageAsins --> ExistingKeysManager
+
+AmazonService --> CredentialsGenerator
+AmazonService --> LoggerInterface
+
+' Команды → Сервисы
+IdentifyCrossVariationsCommand --> IdentifyProducts
+KafkaToSheetCommand --> ManageAsins
+SheetToKafkaCommand --> ManageAsins
+
+' Model используется обработчиками/сервисами
+GoogleSheetsHandler --> DataCollection
+GoogleSheetsHandler --> DataRow
+
+@enduml

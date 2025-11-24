@@ -1,19 +1,20 @@
 services:
-
-  amazon_asin_product_sync:
+  php:
+    image: amazon-asin-sync-php:latest
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      APP_ENV: 'prod'
+      args:
+        APP_ENV: ${APP_ENV}
     env_file:
-      - .env.prod
+      - .env
     networks:
-      - walmart_scraper_network
-    command: composer run-script serve
+      - internal_sync_network
+    expose:
+      - 9000
 
 networks:
-  walmart_scraper_network:
+  internal_sync_network:
     driver: bridge
     external: true
-    name: walmart_scraper_network
+    name: internal_sync_network
