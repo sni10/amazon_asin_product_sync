@@ -91,6 +91,8 @@ app:asin-kafka-to-sheet  # Синхронизация Kafka → Google Sheets
 - **Kafka** — продюсеры и консьюмеры для обмена сообщениями
 - **Command** — входные точки Symfony Console
 
+![schema-app.png](schema-app.png)
+
 ## Конфигурация
 
 ### Переменные окружения

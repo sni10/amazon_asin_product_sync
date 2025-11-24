@@ -8,5 +8,5 @@ services:
       XDEBUG_MODE: ${XDEBUG_MODE:-coverage}
     entrypoint: ["/usr/local/bin/entrypoint.sh"]
     command: []
-#    volumes:
-#      - .:/var/www/amazon_asin_product_sync
+    volumes:
+      - .:/var/www/amazon_asin_product_sync
