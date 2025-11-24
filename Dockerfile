@@ -1,6 +1,7 @@
 FROM php:8.3-fpm
 
 ARG APP_ENV
+RUN echo "BUILDING FOR APP_ENV = ${APP_ENV}"
 
 RUN apt-get update && apt-get install -y \
     libpng-dev \
