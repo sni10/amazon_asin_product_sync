@@ -204,11 +204,5 @@ xdebug.idekey=PHPSTORM
 
 ---
 
-## Documentation
-
-- [Development Guidelines](.junie/guidelines.md) — инженерные стандарты и правила разработки
-
----
-
 ## License
 Proprietary License — see [LICENSE](LICENSE) for details
