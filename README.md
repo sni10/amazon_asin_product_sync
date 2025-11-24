@@ -1,9 +1,11 @@
 # Amazon ASIN Product Sync — идентификатор и синхронизатор ASIN по UPC/EAN/GTIN
 
-[![Pipeline](https://img.shields.io/badge/Pipeline-Passing-brightgreen?style=for-the-badge&logo=gitlab&logoColor=white)](https://gitlab-work/bezoxx/up-ident-edi-scraper/-/pipelines)
-[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white)](https://gitlab-work/bezoxx/up-ident-edi-scraper/-/pipelines)
+[![Release](https://img.shields.io/github/v/release/sni10/amazon_asin_product_sync?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sni10/amazon_asin_product_sync/releases)
+[![Release Workflow](https://img.shields.io/github/actions/workflow/status/sni10/amazon_asin_product_sync/release.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Release)](https://github.com/sni10/amazon_asin_product_sync/actions/workflows/release.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/sni10/amazon_asin_product_sync/tests.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Tests)](https://github.com/sni10/amazon_asin_product_sync/actions/workflows/tests.yml)
+[![Coverage](https://img.shields.io/badge/Coverage-0%25-lightgrey?style=for-the-badge&logo=codecov&logoColor=white)](https://github.com/sni10/amazon_asin_product_sync/actions/workflows/tests.yml)
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/)
-[![Symfony](https://img.shields.io/badge/Symfony-6.4-2496ED?style=for-the-badge&logo=Symfony&logoColor=white)](https://symfony.com/)
+[![Symfony](https://img.shields.io/badge/Symfony-6.4-000000?style=for-the-badge&logo=Symfony&logoColor=white)](https://symfony.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
 
@@ -132,6 +134,3 @@ make test_coverage
 make test_filter filter="AmazonServiceTest"
 ```
 
-## Документация
-
-- [Development Guidelines](.junie/guidelines.md) — инженерные стандарты и правила разработки
