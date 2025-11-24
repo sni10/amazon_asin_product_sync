@@ -6,12 +6,8 @@ services:
       dockerfile: Dockerfile
       args:
         APP_ENV: ${APP_ENV}
-    environment:
-      APP_ENV: ${APP_ENV}
-      KAFKA_EDI_SERVER_HOST: ${KAFKA_EDI_SERVER_HOST}
-      KAFKA_EDI_SERVER_PORT: ${KAFKA_EDI_SERVER_PORT}
-    container_name: amazon_asin_product_sync
-    command: /usr/bin/supervisord -c /etc/supervisord.conf
+    env_file:
+      - .env
     networks:
       - internal_sync_network
     expose:
